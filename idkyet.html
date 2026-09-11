@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JHPIC · James' Huge Problems Informatics Contest</title>
+<style>
+  * { box-sizing: border-box; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+  :root {
+    --bg: #0d1117; --panel: #161b22; --panel2: #1c2128; --border: #30363d;
+    --text: #e6edf3; --muted: #8b949e; --accent: #58a6ff;
+    --green: #3fb950; --red: #f85149; --yellow: #d29922;
+    --purple: #a371f7; --orange: #ffa657;
+  }
+  body { margin: 0; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* ---------- LOGIN SCREEN ---------- */
+  .login-screen {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    padding: 1.5rem; background: radial-gradient(circle at 50% 0%, #1c2128 0%, #0d1117 60%);
+  }
+  .login-card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 1.5rem;
+    padding: 2rem 2.2rem; width: 100%; max-width: 400px; box-shadow: 0 20px 60px -20px rgba(0,0,0,0.8);
+  }
+  .login-card h1 { margin: 0 0 0.3rem; font-size: 1.5rem; letter-spacing: -0.02em; display: flex; align-items: center; gap: 0.5rem; }
+  .login-card h1 span { background: var(--accent); color: #0d1117; font-size: 0.6rem; padding: 0.15rem 0.5rem; border-radius: 100px; font-weight: 700; letter-spacing: 0.03em; }
+  .login-card p.sub { margin: 0 0 1.5rem; color: var(--muted); font-size: 0.85rem; }
+  .login-card label { display: block; font-size: 0.78rem; color: var(--muted); margin-bottom: 0.35rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+  .login-card input[type=text], .login-card input[type=password] {
+    width: 100%; padding: 0.7rem 0.9rem; background: #0a0e14; color: var(--text);
+    border: 1px solid var(--border); border-radius: 0.6rem; font-family: inherit; font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+  .login-card input:focus { outline: none; border-color: var(--accent); }
+  .login-card button {
+    width: 100%; padding: 0.75rem 1rem; background: var(--accent); color: #0d1117;
+    border: none; border-radius: 0.6rem; font-family: inherit; font-size: 0.92rem; font-weight: 700;
+    cursor: pointer; transition: 0.15s;
+  }
+  .login-card button:hover { background: #79b8ff; }
+  .login-card .err { color: var(--red); font-size: 0.82rem; margin-bottom: 0.8rem; min-height: 1.2em; }
+  .login-card .switch { text-align: center; margin-top: 1rem; font-size: 0.82rem; color: var(--muted); }
+  .login-card .switch a { color: var(--accent); cursor: pointer; text-decoration: none; }
+  .login-card .switch a:hover { text-decoration: underline; }
+
+  /* ---------- APP SHELL ---------- */
+  .app { display: none; grid-template-columns: 250px 1fr; min-height: 100vh; }
+  .app.active { display: grid; }
+  @media (max-width: 900px) { .app.active { grid-template-columns: 1fr; } }
+
+  .sidebar { background: var(--panel); border-right: 1px solid var(--border); padding: 1.1rem 0; display: flex; flex-direction: column; }
+  .sidebar h1 { font-size: 0.95rem; padding: 0 1.1rem 0.9rem; margin: 0; border-bottom: 1px solid var(--border); letter-spacing: -0.01em; display: flex; align-items: center; gap: 0.5rem; font-weight: 700; }
+  .sidebar h1 span { background: var(--accent); color: #0d1117; font-size: 0.62rem; padding: 0.15rem 0.5rem; border-radius: 100px; font-weight: 700; letter-spacing: 0.03em; }
+
+  .user-box {
+    padding: 0.7rem 1.1rem; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+    font-size: 0.8rem;
+  }
+  .user-box .uname { color: var(--text); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .user-box .role-badge { font-size: 0.6rem; padding: 0.1rem 0.45rem; border-radius: 100px; background: var(--border); color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
+  .user-box .role-badge.admin { background: #5b21b6; color: #ddd6fe; }
+  .user-box button.logout {
+    background: transparent; border: 1px solid var(--border); color: var(--muted);
+    padding: 0.25rem 0.55rem; border-radius: 0.4rem; font-size: 0.72rem; cursor: pointer; font-family: inherit;
+  }
+  .user-box button.logout:hover { border-color: var(--red); color: var(--red); }
+
+  .prob-list { list-style: none; padding: 0; margin: 0.5rem 0 0 0; }
+  .prob-list li { padding: 0.65rem 1.1rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: var(--muted); border-left: 3px solid transparent; transition: 0.1s; gap: 0.5rem; }
+  .prob-list li:hover { background: var(--panel2); color: var(--text); }
+  .prob-list li.active { background: var(--panel2); color: var(--text); border-left-color: var(--accent); }
+  .prob-list li .badge { font-size: 0.62rem; padding: 0.12rem 0.5rem; border-radius: 100px; background: var(--border); color: var(--muted); white-space: nowrap; }
+  .prob-list li .badge.ok { background: #1f6f37; color: #b8f0c4; }
+  .prob-list li .badge.warn { background: #3d2e0a; color: #f0d68c; }
+  .prob-list li .badge.err { background: #4a1d1d; color: #f5a8a8; }
+  .prob-list li .badge.solved { background: #1f6f37; color: #b8f0c4; font-weight: 700; }
+
+  .main { padding: 1.75rem 2.25rem 3rem; overflow-y: auto; max-height: 100vh; }
+  .prob-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; border-bottom: 1px solid var(--border); padding-bottom: 0.9rem; margin-bottom: 1rem; }
+  .prob-header h2 { margin: 0; font-size: 1.4rem; letter-spacing: -0.02em; }
+  .prob-meta { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.5rem; }
+  .tag { font-size: 0.72rem; padding: 0.18rem 0.6rem; border-radius: 100px; background: var(--panel2); color: var(--muted); border: 1px solid var(--border); }
+  .tag.warn { background: #3d2e0a; color: #f0d68c; border-color: #5c450f; }
+  .tag.ok { background: #1f6f37; color: #b8f0c4; border-color: #2e8b48; }
+  .tag.err { background: #4a1d1d; color: #f5a8a8; border-color: #6e2a2a; }
+  .tag.solved { background: #1f6f37; color: #b8f0c4; border-color: #2e8b48; font-weight: 700; }
+
+  .tabs { display: flex; gap: 0.2rem; border-bottom: 1px solid var(--border); margin-bottom: 1.1rem; }
+  .tab { background: transparent; border: none; color: var(--muted); font-size: 0.88rem; padding: 0.55rem 1rem; cursor: pointer; border-bottom: 2px solid transparent; font-family: inherit; transition: 0.1s; }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
+  .panel-content { display: none; }
+  .panel-content.active { display: block; }
+
+  .statement { line-height: 1.7; font-size: 0.93rem; }
+  .statement h3 { font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 1.4rem 0 0.5rem; font-weight: 700; }
+  .statement p { margin: 0.5rem 0; }
+  .statement code { font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.83rem; background: var(--panel2); padding: 0.08rem 0.35rem; border-radius: 0.3rem; color: var(--orange); }
+  .statement code sub { color: var(--orange); }
+  .statement pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.83rem; background: var(--panel2); padding: 0.85rem 1rem; border-radius: 0.6rem; overflow-x: auto; border: 1px solid var(--border); color: #a5d6ff; }
+  .statement ul, .statement ol { padding-left: 1.3rem; margin: 0.5rem 0; }
+  .statement li { margin: 0.2rem 0; }
+  .statement table { border-collapse: collapse; margin: 0.6rem 0; font-size: 0.85rem; }
+  .statement th, .statement td { border: 1px solid var(--border); padding: 0.35rem 0.7rem; text-align: left; }
+  .statement th { background: var(--panel2); }
+
+  .sample-block { margin: 1rem 0; border: 1px solid var(--border); border-radius: 0.7rem; overflow: hidden; }
+  .sample-block .sample-head { background: var(--panel2); padding: 0.5rem 1rem; font-size: 0.78rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+  .sample-block .sample-head .run-sample { background: var(--accent); color: #0d1117; border: none; padding: 0.28rem 0.8rem; border-radius: 100px; font-size: 0.72rem; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .sample-block .sample-head .run-sample:hover { background: #79b8ff; }
+  .sample-block .sample-body { display: grid; grid-template-columns: 1fr 1fr; }
+  @media (max-width: 600px) { .sample-block .sample-body { grid-template-columns: 1fr; } }
+  .sample-block .sample-body > div { padding: 0.7rem 1rem; }
+  .sample-block .sample-body .in { border-right: 1px solid var(--border); }
+  @media (max-width: 600px) { .sample-block .sample-body .in { border-right: none; border-bottom: 1px solid var(--border); } }
+  .sample-block .sample-body pre { margin: 0; font-size: 0.8rem; color: #a5d6ff; white-space: pre; font-family: 'JetBrains Mono', monospace; }
+  .sample-block .sample-body .out pre { color: #7ee787; }
+  .sample-label { font-size: 0.7rem; color: var(--muted); margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  .editor-toolbar { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; margin-bottom: 0.6rem; }
+  .editor-toolbar select, .editor-toolbar button { background: var(--panel2); color: var(--text); border: 1px solid var(--border); padding: 0.4rem 0.8rem; border-radius: 0.5rem; font-size: 0.82rem; font-family: inherit; cursor: pointer; transition: 0.1s; }
+  .editor-toolbar select:hover, .editor-toolbar button:hover { background: var(--panel); border-color: var(--muted); }
+  .editor-toolbar button.primary { background: var(--accent); color: #0d1117; border-color: var(--accent); font-weight: 700; }
+  .editor-toolbar button.primary:hover { background: #79b8ff; }
+  .editor-toolbar button:disabled { opacity: 0.5; cursor: wait; }
+  .editor-toolbar .spacer { flex: 1; }
+
+  textarea.code { width: 100%; min-height: 260px; padding: 0.9rem 1rem; border: 1px solid var(--border); border-radius: 0.6rem; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.82rem; background: #0a0e14; color: var(--text); line-height: 1.55; resize: vertical; tab-size: 2; }
+  textarea.code:focus { outline: none; border-color: var(--accent); }
+  textarea.stdin { width: 100%; min-height: 120px; padding: 0.7rem 0.9rem; border: 1px solid var(--border); border-radius: 0.6rem; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.8rem; background: #0a0e14; color: var(--text); line-height: 1.55; resize: vertical; }
+  textarea.stdin:focus { outline: none; border-color: var(--accent); }
+  textarea.json { width: 100%; min-height: 340px; padding: 0.9rem 1rem; border: 1px solid var(--border); border-radius: 0.6rem; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.8rem; background: #0a0e14; color: #a5d6ff; line-height: 1.5; resize: vertical; tab-size: 2; }
+  textarea.json:focus { outline: none; border-color: var(--accent); }
+  .json-status { font-size: 0.8rem; margin-top: 0.4rem; }
+  .json-status.ok { color: var(--green); }
+  .json-status.bad { color: var(--red); }
+
+  .field-label { font-size: 0.72rem; color: var(--muted); margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .results { margin-top: 1rem; }
+  .result-box { background: #0a0e14; border: 1px solid var(--border); border-radius: 0.6rem; padding: 0.9rem 1rem; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.8rem; white-space: pre-wrap; word-break: break-word; min-height: 90px; }
+  .result-box .ok { color: var(--green); }
+  .result-box .bad { color: var(--red); }
+  .result-box .warn { color: var(--yellow); }
+  .result-box .muted { color: var(--muted); }
+
+  .verdict-row { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; margin-bottom: 0.5rem; }
+  .verdict { font-weight: 800; padding: 0.15rem 0.6rem; border-radius: 100px; font-size: 0.75rem; letter-spacing: 0.02em; }
+  .verdict.AC { background: #1f6f37; color: #b8f0c4; }
+  .verdict.WA { background: #6e1d1d; color: #f8a8a8; }
+  .verdict.TLE { background: #1e3a8a; color: #93c5fd; }
+  .verdict.MLE { background: #4c1d95; color: #c4b5fd; }
+  .verdict.RE { background: #6e1d1d; color: #f8a8a8; }
+  .verdict.CE { background: #7c2d12; color: #fdba74; }
+  .verdict.ERR { background: #78350f; color: #fcd34d; }
+  .status-msg { font-size: 0.8rem; color: var(--muted); }
+
+  .note { background: #1c2128; border-left: 3px solid var(--yellow); padding: 0.6rem 0.9rem; border-radius: 0.4rem; font-size: 0.82rem; color: #f0d68c; margin: 0.7rem 0; }
+  .note code { background: #0a0e14; padding: 0.05rem 0.3rem; border-radius: 0.25rem; color: var(--orange); font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; }
+
+  details.help { margin-top: 1rem; font-size: 0.82rem; color: var(--muted); }
+  details.help summary { cursor: pointer; padding: 0.4rem 0; }
+  details.help summary:hover { color: var(--text); }
+
+  .btn-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.6rem; }
+  .btn-row button { background: var(--panel2); color: var(--text); border: 1px solid var(--border); padding: 0.4rem 0.9rem; border-radius: 0.5rem; font-size: 0.8rem; font-family: inherit; cursor: pointer; }
+  .btn-row button:hover { background: var(--panel); border-color: var(--muted); }
+  .btn-row button.primary { background: var(--accent); color: #0d1117; border-color: var(--accent); font-weight: 700; }
+  .btn-row button.primary:hover { background: #79b8ff; }
+
+  .mode-toggle { display: inline-flex; align-items: center; gap: 0.4rem; background: var(--panel2); border: 1px solid var(--border); padding: 0.35rem 0.7rem; border-radius: 100px; font-size: 0.78rem; cursor: pointer; user-select: none; }
+  .mode-toggle .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); transition: 0.15s; }
+  .mode-toggle.on .dot { background: var(--green); box-shadow: 0 0 6px #3fb95088; }
+  .mode-toggle:hover { border-color: var(--muted); }
+
+  .progress-bar-wrap { padding: 0.8rem 1.1rem; border-bottom: 1px solid var(--border); }
+  .progress-bar { height: 6px; background: var(--border); border-radius: 100px; overflow: hidden; margin-top: 0.3rem; }
+  .progress-bar > div { height: 100%; background: var(--green); transition: 0.3s; }
+  .progress-label { font-size: 0.7rem; color: var(--muted); display: flex; justify-content: space-between; }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     LOGIN SCREEN
+     ============================================================ -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <h1>JHPIC <span>Beta</span></h1>
+    <p class="sub" id="loginSub">Sign in to track your progress</p>
+    <div class="err" id="loginErr"></div>
+
+    <div id="signinForm">
+      <label for="loginUser">Username</label>
+      <input type="text" id="loginUser" autocomplete="username" placeholder="your username">
+      <label for="loginPass">Password</label>
+      <input type="password" id="loginPass" autocomplete="current-password" placeholder="your password">
+      <button id="signinBtn">Sign in</button>
+      <div class="switch">
+        Don't have an account? <a id="showSignup">Create one</a>
+      </div>
+    </div>
+
+    <div id="signupForm" style="display:none;">
+      <label for="signupUser">Choose a username</label>
+      <input type="text" id="signupUser" autocomplete="username" placeholder="username (3-20 chars)">
+      <label for="signupPass">Choose a password</label>
+      <input type="password" id="signupPass" autocomplete="new-password" placeholder="min 4 characters">
+      <label for="signupPass2">Confirm password</label>
+      <input type="password" id="signupPass2" autocomplete="new-password" placeholder="repeat password">
+      <button id="signupBtn">Create account</button>
+      <div class="switch">
+        Already have an account? <a id="showSignin">Sign in</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     APP SHELL
+     ============================================================ -->
+<div class="app" id="app">
+  <aside class="sidebar">
+    <h1>JHPIC <span>Beta</span></h1>
+    <div class="user-box">
+      <div style="min-width:0; flex:1; display:flex; flex-direction:column; gap:0.15rem;">
+        <span class="uname" id="userName">—</span>
+        <span class="role-badge" id="userRole">student</span>
+      </div>
+      <button class="logout" id="logoutBtn">logout</button>
+    </div>
+    <div class="progress-bar-wrap" id="progressWrap">
+      <div class="progress-label"><span>Progress</span><span id="progressText">0 / 5</span></div>
+      <div class="progress-bar"><div id="progressFill" style="width:0%"></div></div>
+    </div>
+    <ul class="prob-list" id="probList"></ul>
+  </aside>
+  <main class="main" id="main"></main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
+
+<script>
+/* ============================================================
+ * ACCOUNTS + AUTH
+ * ------------------------------------------------------------
+ * NOTE: This is a client-side demo. "Passwords" are hashed with a
+ * tiny non-cryptographic hash and stored in localStorage. It's fine
+ * for classroom/contest use on a single device but NOT real security.
+ * The admin account is hardcoded below.
+ * ============================================================ */
+const ADMIN_USERNAME = 'admin';
+const ADMIN_PASSWORD = 'jhpic-admin-2024';   // <-- change this!
+
+// Tiny non-crypto hash, just so passwords aren't plaintext in LS
+function hashStr(s) {
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
+  return 'h' + (h >>> 0).toString(36) + '_' + s.length;
+}
+
+const LS_USERS   = 'jhpic_users_v1';
+const LS_SESSION = 'jhpic_session_v1';
+
+function loadUsers() {
+  try { return JSON.parse(localStorage.getItem(LS_USERS) || '{}'); }
+  catch (e) { return {}; }
+}
+function saveUsers(u) { localStorage.setItem(LS_USERS, JSON.stringify(u)); }
+
+function getUser(name) {
+  const users = loadUsers();
+  return users[name.toLowerCase()] || null;
+}
+function createUser(name, pass) {
+  const users = loadUsers();
+  const key = name.toLowerCase();
+  if (users[key]) throw new Error('Username already taken');
+  if (!/^[a-zA-Z0-9_]{3,20}$/.test(name)) throw new Error('Username must be 3-20 chars (letters, digits, _)');
+  if (pass.length < 4) throw new Error('Password must be at least 4 characters');
+  users[key] = {
+    username: name,
+    passwordHash: hashStr(pass),
+    progress: {},      // { q1: 'solved' | 'attempted' | null, ... }
+    savedCode: {},     // { q1: { lang, code } }
+    createdAt: Date.now(),
+  };
+  saveUsers(users);
+  return users[key];
+}
+function verifyUser(name, pass) {
+  // Hardcoded admin
+  if (name.toLowerCase() === ADMIN_USERNAME && pass === ADMIN_PASSWORD) {
+    return { username: ADMIN_USERNAME, isAdmin: true, progress: {}, savedCode: {} };
+  }
+  const u = getUser(name);
+  if (!u) throw new Error('No such user');
+  if (u.passwordHash !== hashStr(pass)) throw new Error('Incorrect password');
+  return { ...u, isAdmin: false };
+}
+function updateUser(name, mutate) {
+  const users = loadUsers();
+  const key = name.toLowerCase();
+  if (!users[key]) return;
+  mutate(users[key]);
+  saveUsers(users);
+}
+
+let currentUser = null;   // { username, isAdmin, progress, savedCode }
+
+function setSession(name, pass) {
+  try { localStorage.setItem(LS_SESSION, JSON.stringify({ name, pass })); } catch (e) {}
+}
+function clearSession() { localStorage.removeItem(LS_SESSION); }
+function restoreSession() {
+  try {
+    const s = JSON.parse(localStorage.getItem(LS_SESSION) || 'null');
+    if (!s) return null;
+    return verifyUser(s.name, s.pass);
+  } catch (e) { return null; }
+}
+
+/* ============================================================
+ * CHECKERS
+ * ============================================================ */
+function stripTrailing(s) {
+  return String(s).replace(/\r\n/g, '\n').split('\n').map(l => l.replace(/[ \t]+$/,'')).join('\n').replace(/\n+$/,'');
+}
+function checkOutput(userOut, correctOut) {
+  const u = stripTrailing(userOut);
+  const e = stripTrailing(correctOut);
+  if (u === e) return { verdict: 'AC', detail: 'Accepted' };
+  return { verdict: 'WA', detail: 'Wrong answer' };
+}
+const CHECKERS = {
+  q1: (u, e) => checkOutput(u, e),
+  q2: (u, e) => {
+    const ut = stripTrailing(u).trim(), et = stripTrailing(e).trim();
+    const mu = ut.match(/^(\d+(?:\.\d+)?)\s+(-?\d+)$/);
+    const me = et.match(/^(\d+(?:\.\d+)?)\s+(-?\d+)$/);
+    if (!mu || !me) return { verdict: 'WA', detail: 'Wrong answer' };
+    if (Math.abs(parseFloat(mu[1]) - parseFloat(me[1])) > 0.01) return { verdict: 'WA', detail: 'Wrong answer' };
+    if (parseInt(mu[2],10) !== parseInt(me[2],10)) return { verdict: 'WA', detail: 'Wrong answer' };
+    return { verdict: 'AC', detail: 'Accepted' };
+  },
+  q3: (u, e) => checkOutput(u, e),
+  q4: (u, e) => checkOutput(u, e),
+  q5: () => ({ verdict: 'ERR', detail: 'No automated checker — manual comparison only.' }),
+};
+
+/* ============================================================
+ * DEFAULT TEST CASES (admin-editable)
+ * ============================================================ */
+const DEFAULT_TESTCASES = {
+  q1: [
+    { input: "25 123\nSCI PED MAS ENG MAA\nSCI PED MAS ENG MAA\nSCI PED MAS ENG MAA\nSCI PED MAS ENG MAA\nSCI PED MAS ENG MAA", correct: "YES", note: "Statement sample." }
+  ],
+  q2: [
+    { input: "4 5 2 24\n1 2 3 1\n2 1 1 1 1\n3 2\n1", correct: "88.89 1", note: "Statement sample." }
+  ],
+  q3: [
+    { input: "10\nP 10\nR 14 64\nP 8\nR 62 100\nR 32 74\nP 9\nP 5\nF 23\nF 43\nR 30 54", correct: "5\n62\n43\n14 64\n3\n43 14-64 62-100", note: "Statement sample." }
+  ],
+  q4: [
+    { input: "1 2 1 2\n1 2 5\n10 10", correct: "5", note: "Sample 1 · single direct edge." },
+    { input: "1 5 5 5\n1 2 10\n2 5 10\n1 3 3\n3 4 3\n4 5 3\n100 100 1 100 100", correct: "20", note: "Sample 2 · intermediate cap blocks the cheap route." }
+  ],
+  q5: []
+};
+
+const LS_TESTCASES = 'jhpic_testcases_v3';
+function loadTestcases() {
+  try {
+    const raw = localStorage.getItem(LS_TESTCASES);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      const merged = {};
+      for (const id of Object.keys(DEFAULT_TESTCASES)) {
+        merged[id] = Array.isArray(parsed[id]) ? parsed[id] : JSON.parse(JSON.stringify(DEFAULT_TESTCASES[id]));
+      }
+      return merged;
+    }
+  } catch (e) {}
+  return JSON.parse(JSON.stringify(DEFAULT_TESTCASES));
+}
+function saveTestcases(tc) { try { localStorage.setItem(LS_TESTCASES, JSON.stringify(tc)); } catch (e) {} }
+let TESTCASES = loadTestcases();
+
+/* ============================================================
+ * PROBLEMS
+ * ============================================================ */
+const PROBLEMS = [
+  {
+    id: 'q1', title: 'Q1 · Portable Library',
+    timeLimit: '1.0 sec', memoryLimit: '256 MB',
+    status: 'warn',
+    statusNote: 'Best-effort checker. Verdict only — no diff details.',
+    statement: `
+      <h3>Problem Statement</h3>
+      <p>Everyday, James carries a bag full of books that we call the "portable library". His timetable for the day is full of classes, and he is far too lazy to go to Upham to put his books away. There is a certain limit on how much stuff he can fit into his bag. He can put at most size <code>S</code> of stuff, and at most weight <code>W</code> of stuff. If there is no limit, it is input <code>-1</code>.</p>
+      <p>His timetable is in the form <code>### ### ### ### ###</code>, with subjects:</p>
+      <ul>
+        <li><code>SCI</code>: 2B8, 2 × textbook</li>
+        <li><code>SOS</code>: 2B8, device</li>
+        <li><code>MAA</code>: 3 × 1B5, Gamma Textbook</li>
+        <li><code>PED</code>: nothing!</li>
+        <li><code>MAS</code>: 2B8</li>
+        <li><code>DCT</code>: 2B8, device</li>
+        <li><code>ENG</code>: 2B8, 1B8</li>
+      </ul>
+      <p>Item sizes and weights:</p>
+      <table>
+        <tr><th>Item</th><th>Size</th><th>Weight</th></tr>
+        <tr><td>2B8 book</td><td>2</td><td>2</td></tr>
+        <tr><td>Textbook</td><td>4</td><td>2</td></tr>
+        <tr><td>Gamma Textbook</td><td>8</td><td>5</td></tr>
+        <tr><td>1B5 / 1B8 book</td><td>1</td><td>1</td></tr>
+        <tr><td>Device</td><td>1</td><td>3</td></tr>
+      </table>
+      <p><strong>Note:</strong> he must bring his device and keep it for the whole day if any subject requiring it is present.</p>
+      <p>Help James find out whether he can last a whole week, or his bag is just not big enough.</p>
+      <h3>Input</h3>
+      <ul><li>2 numbers <code>S W</code></li><li>5 lines representing each day, each with 5 subjects</li></ul>
+      <h3>Output</h3>
+      <p><code>YES</code> if James can last a whole week, otherwise <code>NO</code>.</p>
+      <h3>Subtasks</h3>
+      <ul><li>(12%) S = -1</li><li>(12%) Same schedule every day</li><li>(14%) Never need a device</li><li>(62%) No further constraints</li></ul>
+    `,
+  },
+  {
+    id: 'q2', title: 'Q2 · Photos and Photons',
+    timeLimit: '1.0 sec', memoryLimit: '256 MB',
+    status: 'warn',
+    statusNote: 'Best-effort checker. Verdict only.',
+    statement: `
+      <h3>Problem Statement</h3>
+      <p>When James opens his device, he finds himself in an extremely cluttered screen full of photos, applications, and folders. Unable to handle the brightness, he wants to dim his screen. On his screen, there are:</p>
+      <ul>
+        <li><code>X</code> photos, each with brightness <code>P<sub>i</sub></code></li>
+        <li><code>Y</code> folders, each with brightness <code>F<sub>i</sub></code></li>
+        <li><code>Z</code> applications, each with brightness <code>A<sub>i</sub></code></li>
+      </ul>
+      <p>However, when James opens an application, its brightness triples; a folder's brightness doubles when he opens it. His device can only handle at most <strong>1 application</strong> and <strong>2 folders</strong> open.</p>
+      <p>To calculate how dim his screen needs to be, he has a photon limit <code>Q</code>. Lightness is calculated by: <code>dimness × total_brightness × 100</code>.</p>
+      <p>Sadly, his dad sometimes comes in and turns on the light, which reflects with brightness <code>L</code>. He has to delete stuff (no apps or folders open) to stay within his photon limit. Find the minimum number of items he has to delete.</p>
+      <h3>Input</h3>
+      <ul><li>4 numbers <code>X Y Z Q</code></li><li><code>X</code> values <code>P<sub>1</sub>…P<sub>X</sub></code></li><li><code>Y</code> values <code>F<sub>1</sub>…F<sub>Y</sub></code></li><li><code>Z</code> values <code>A<sub>1</sub>…A<sub>Z</sub></code></li><li>1 number <code>L</code></li></ul>
+      <h3>Output</h3>
+      <p>Maximum dimness (rounded to 2 d.p.) followed by the minimum number of items to delete.</p>
+      <h3>Subtasks</h3>
+      <ul><li>(10%) L = 0</li><li>(12%) All P equal, all F equal, all A equal</li><li>(24%) X, Y, Z ≤ 200</li><li>(54%) No further constraints</li></ul>
+    `,
+  },
+  {
+    id: 'q3', title: 'Q3 · Clutterfunk',
+    timeLimit: '1.0 sec', memoryLimit: '256 MB',
+    status: 'warn',
+    statusNote: 'Best-effort checker. Verdict only.',
+    statement: `
+      <h3>Problem Statement</h3>
+      <p>For a while now, James has been non-stop grinding Clutterfunk. He wants you to find out his current status. He reports his progress the moment he has gotten the run.</p>
+      <h3>Notation</h3>
+      <ul><li><code>P #</code> — a practice run of <code>#</code> attempts</li><li><code>R A B</code> — a run from <code>A%</code> to <code>B%</code></li><li><code>F #</code> — a <code>#</code> percent run from 0</li></ul>
+      <h3>Input</h3>
+      <ul><li>Integer <code>N</code> — number of progressions</li><li>Next <code>N</code> lines</li></ul>
+      <h3>Output</h3>
+      <ol><li>His best practice attempt</li><li>His best run to 100%</li><li>His best run from 0%</li><li>His best run (A B)</li><li>How many runs he has the level in</li><li>The runs (if line 5 isn't -1)</li></ol>
+      <p>Output <code>-1</code> for any line that doesn't exist.</p>
+      <h3>Subtasks</h3>
+      <ul><li>(10%) All runs are from 0</li><li>(13%) All practice runs</li><li>(9%) All runs are runs</li><li>(23%) N ≤ 200</li><li>(46%) No further constraints</li></ul>
+    `,
+  },
+  {
+    id: 'q4', title: 'Q4 · Absolute Tiredness',
+    timeLimit: '1.5 sec', memoryLimit: '256 MB',
+    status: 'warn',
+    statusNote: 'Interpretation 1 checker. Verdict only.',
+    statement: `
+      <h3>Problem Statement</h3>
+      <p>James is journeying across NZ. There are <code>Z</code> places and <code>N</code> roads, each road connects places <code>A, B</code> with difficulty <code>D</code>. Each place has a cap <code>C<sub>i</sub></code> such that if the average difficulty of all traversed roads is larger than <code>C<sub>i</sub></code>, he dies of tiredness.</p>
+      <p>Find the easiest route from <code>X</code> to <code>Y</code>, and output <code>-1</code> if no such path exists.</p>
+      <h3>Input</h3>
+      <ul><li>4 numbers <code>X Y N Z</code></li><li>Next <code>N</code> lines: <code>A B D</code></li><li>Next line: <code>Z</code> numbers <code>C<sub>1</sub>…C<sub>Z</sub></code></li></ul>
+      <h3>Output</h3>
+      <p>Minimum difficulty from <code>X</code> to <code>Y</code>, or <code>-1</code> if impossible.</p>
+      <h3>Subtasks</h3>
+      <ul><li>(10%) All roads value 1</li><li>(15%) Z = 4</li><li>(23%) N ≤ 100, Z ≤ 200</li><li>(52%) No further constraints</li></ul>
+    `,
+  },
+  {
+    id: 'q5', title: 'Q5 · The Ultimate Battle Cats',
+    timeLimit: '1.5 sec', memoryLimit: '256 MB',
+    status: 'err',
+    statusNote: 'No automated checker.',
+    statement: `
+      <h3>Problem Statement</h3>
+      <p>James is playing Battle Cats. The enemy has a unit with strength <code>S</code>, health <code>H</code>, speed <code>V</code>, and sends them out every <code>K</code> seconds.</p>
+      <p>James has 4 cats with strength <code>X<sub>i</sub></code>, health <code>T<sub>i</sub></code>, recharge <code>R<sub>i</sub></code>, speed <code>W<sub>i</sub></code>, and cost <code>M<sub>i</sub></code>.</p>
+      <p>The length of the battlefield is <code>L</code>, and the enemy tower has health <code>A</code>, your tower has health <code>B</code>. The laser attacks every enemy unit for <code>C</code> damage every <code>D</code> seconds. You generate money at a speed of $10 every 3 seconds.</p>
+      <p>Find the minimum time to take down the opponent, or output <code>-1</code>.</p>
+      <h3>Input</h3>
+      <ul><li>4 numbers <code>S H K V</code></li><li>4 lines of 5 numbers each</li><li>5 numbers <code>L A B C D</code></li></ul>
+      <h3>Output</h3>
+      <p>Minimum time to take down the enemy, or <code>-1</code>.</p>
+      <div class="note">⚠ <strong>Manual comparison only.</strong></div>
+    `,
+  },
+];
+
+/* ============================================================
+ * LANGUAGES
+ * ============================================================ */
+const LANGUAGES = {
+  javascript: { label: '🟨 JavaScript', mode: 'js',
+    example: `const data = require('fs').readFileSync(0, 'utf8');\nconsole.log('Hello, JHPIC!');\n` },
+  python: { label: '🐍 Python 3', mode: 'pyodide',
+    example: `import sys\ndata = sys.stdin.read()\nprint("Hello, JHPIC!")\n` },
+  cpp17: { label: '🔷 C++17', mode: 'judge0', judge0Id: 54,
+    example: `#include <iostream>\nusing namespace std;\nint main() {\n    cout << "Hello, JHPIC!" << endl;\n    return 0;\n}\n` },
+  c11: { label: '🔵 C11', mode: 'judge0', judge0Id: 50,
+    example: `#include <stdio.h>\nint main() {\n    printf("Hello, JHPIC!\\\\n");\n    return 0;\n}\n` },
+  java17: { label: '☕ Java 17', mode: 'judge0', judge0Id: 91,
+    example: `import java.util.Scanner;\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println("Hello, JHPIC!");\n    }\n}\n` },
+  ruby: { label: '💎 Ruby', mode: 'judge0', judge0Id: 72,
+    example: `puts "Hello, JHPIC!"\n` },
+  haskell: { label: 'λ Haskell', mode: 'judge0', judge0Id: 61,
+    example: `main :: IO ()\nmain = putStrLn "Hello, JHPIC!"\n` },
+};
+
+/* ============================================================
+ * STATE
+ * ============================================================ */
+const state = {};
+PROBLEMS.forEach(p => {
+  const first = (TESTCASES[p.id] && TESTCASES[p.id][0]) ? TESTCASES[p.id][0] : null;
+  state[p.id] = {
+    lang: 'javascript',
+    code: LANGUAGES.javascript.example,
+    stdin: first ? first.input : '',
+    lastOutput: '', lastVerdict: null,
+  };
+});
+let currentProblemId = PROBLEMS[0].id;
+let pyodide = null; let pyodideReady = null;
+let friendlyMode = true;
+
+/* ============================================================
+ * PROGRESS PERSISTENCE
+ * ============================================================ */
+function loadUserState(user) {
+  // Fill state[p.id].code / lang from user.savedCode
+  for (const p of PROBLEMS) {
+    const saved = user.savedCode && user.savedCode[p.id];
+    if (saved && saved.code) {
+      state[p.id].code = saved.code;
+      state[p.id].lang = saved.lang || 'javascript';
+    }
+  }
+}
+function saveUserState() {
+  if (!currentUser || currentUser.isAdmin) return;   // admin doesn't persist
+  const savedCode = {};
+  for (const p of PROBLEMS) {
+    savedCode[p.id] = { code: state[p.id].code, lang: state[p.id].lang };
+  }
+  updateUser(currentUser.username, u => {
+    u.savedCode = savedCode;
+  });
+}
+function markProgress(problemId, result) {
+  if (!currentUser) return;
+  if (currentUser.isAdmin) return;   // admin progress not tracked
+  updateUser(currentUser.username, u => {
+    u.progress = u.progress || {};
+    if (result === 'AC') u.progress[problemId] = 'solved';
+    else if (!u.progress[problemId]) u.progress[problemId] = 'attempted';
+  });
+  currentUser.progress = currentUser.progress || {};
+  if (result === 'AC') currentUser.progress[problemId] = 'solved';
+  else if (!currentUser.progress[problemId]) currentUser.progress[problemId] = 'attempted';
+  renderSidebar();
+}
+function solvedCount() {
+  if (!currentUser || !currentUser.progress) return 0;
+  return PROBLEMS.filter(p => currentUser.progress[p.id] === 'solved').length;
+}
+
+/* ============================================================
+ * RUNNERS
+ * ============================================================ */
+async function loadPyodideOnce() {
+  if (!pyodideReady) pyodideReady = (async () => { pyodide = await loadPyodide(); return pyodide; })();
+  return pyodideReady;
+}
+function runJavaScript(code, stdin, limits) {
+  return new Promise(resolve => {
+    const wallMs = Math.max(500, limits.wallTime * 1000);
+    const workerSource = `
+      const __STDIN__ = ${JSON.stringify(stdin)};
+      const __LOGS__ = [];
+      const stringifyArg = a => { if (typeof a === 'object' && a !== null) { try { return JSON.stringify(a); } catch (e) { return String(a); } } return String(a); };
+      const fakeFs = { readFileSync: fd => fd === 0 ? __STDIN__ : '', writeFileSync: () => {} };
+      const customRequire = name => name === 'fs' ? fakeFs : {};
+      const fakeProcess = { argv: [], env: {}, exit: () => {}, stdout: { write: s => __LOGS__.push(s) }, stderr: { write: s => __LOGS__.push(s) } };
+      const fakeConsole = {
+        log:   (...a) => __LOGS__.push(a.map(stringifyArg).join(' ')),
+        error: (...a) => __LOGS__.push(a.map(stringifyArg).join(' ')),
+        warn:  (...a) => __LOGS__.push(a.map(stringifyArg).join(' ')),
+        info:  (...a) => __LOGS__.push(a.map(stringifyArg).join(' ')),
+      };
+      try {
+        const wrapped = new Function('require','console','process','module','exports','__dirname','__filename', ${JSON.stringify(code)});
+        wrapped(customRequire, fakeConsole, fakeProcess, {}, {}, '/', 'index.js');
+        self.postMessage({ output: __LOGS__.join('\\n'), error: null });
+      } catch (err) { self.postMessage({ output: __LOGS__.join('\\n'), error: err.message }); }
+    `;
+    const blob = new Blob([workerSource], { type: 'application/javascript' });
+    const url = URL.createObjectURL(blob);
+    const worker = new Worker(url);
+    let settled = false;
+    const t = setTimeout(() => { if (settled) return; settled = true; worker.terminate(); URL.revokeObjectURL(url); resolve({ output: null, error: 'Time Limit Exceeded', verdict: 'TLE' }); }, wallMs);
+    worker.onmessage = e => { if (settled) return; settled = true; clearTimeout(t); worker.terminate(); URL.revokeObjectURL(url); resolve({ output: e.data.output, error: e.data.error, verdict: e.data.error ? 'RE' : 'AC' }); };
+    worker.onerror = err => { if (settled) return; settled = true; clearTimeout(t); worker.terminate(); URL.revokeObjectURL(url); resolve({ output: null, error: err.message || 'Worker error', verdict: 'RE' }); };
+  });
+}
+function runPython(code, stdin, limits) {
+  return new Promise(resolve => {
+    const wallMs = Math.max(500, limits.wallTime * 1000);
+    const workerSource = `
+      importScripts('https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js');
+      const __USER_CODE__ = ${JSON.stringify(code)};
+      const __USER_STDIN__ = ${JSON.stringify(stdin)};
+      (async () => {
+        try {
+          const py = await loadPyodide();
+          py.globals.set('__user_stdin', __USER_STDIN__);
+          await py.runPythonAsync(\`
+import sys, io, builtins
+__orig_stdin__ = sys.stdin
+__orig_stdout__ = sys.stdout
+__orig_stderr__ = sys.stderr
+__orig_input__ = builtins.input
+sys.stdin = io.StringIO(__user_stdin)
+sys.stdout = io.StringIO()
+sys.stderr = io.StringIO()
+def __fake_input__(prompt=''):
+    if prompt:
+        sys.stdout.write(str(prompt)); sys.stdout.flush()
+    line = sys.stdin.readline()
+    if not line:
+        raise EOFError('EOF when reading a line')
+    return line.rstrip('\\\\n')
+builtins.input = __fake_input__
+\`);
+          let err = null;
+          try { await py.runPythonAsync(__USER_CODE__); } catch (e) { err = e && e.message ? e.message : String(e); }
+          const stdout = py.runPython('sys.stdout.getvalue()');
+          const stderr = py.runPython('sys.stderr.getvalue()');
+          await py.runPythonAsync(\`
+import sys, builtins
+sys.stdin = __orig_stdin__
+sys.stdout = __orig_stdout__
+sys.stderr = __orig_stderr__
+builtins.input = __orig_input__
+\`);
+          self.postMessage({ output: stdout + (stderr ? '\\n' + stderr : ''), error: err });
+        } catch (e) { self.postMessage({ output: null, error: 'Pyodide error: ' + (e && e.message ? e.message : String(e)) }); }
+      })();
+    `;
+    const blob = new Blob([workerSource], { type: 'application/javascript' });
+    const url = URL.createObjectURL(blob);
+    const worker = new Worker(url);
+    let settled = false;
+    const t = setTimeout(() => { if (settled) return; settled = true; worker.terminate(); URL.revokeObjectURL(url); resolve({ output: null, error: 'Time Limit Exceeded', verdict: 'TLE' }); }, wallMs);
+    worker.onmessage = e => { if (settled) return; settled = true; clearTimeout(t); worker.terminate(); URL.revokeObjectURL(url); resolve({ output: e.data.output, error: e.data.error, verdict: e.data.error ? 'RE' : 'AC' }); };
+    worker.onerror = err => { if (settled) return; settled = true; clearTimeout(t); worker.terminate(); URL.revokeObjectURL(url); resolve({ output: null, error: err.message || 'Worker error', verdict: 'RE' }); };
+  });
+}
+async function runViaJudge0(judge0Id, code, stdin, limits) {
+  const url = 'https://ce.judge0.com/submissions?wait=true&base64_encoded=false';
+  const body = { language_id: judge0Id, source_code: code, stdin, cpu_time_limit: limits.cpuTime, wall_time_limit: limits.wallTime, memory_limit: limits.memoryKb };
+  try {
+    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (!res.ok) return { output: null, error: `Judge0 HTTP ${res.status}`, verdict: 'ERR' };
+    const data = await res.json();
+    const statusId = data.status ? data.status.id : 0;
+    const stdout = data.stdout || ''; const stderr = data.stderr || ''; const compileOut = data.compile_output || '';
+    if (statusId === 6) return { output: null, error: 'Compilation error:\n' + compileOut, verdict: 'CE' };
+    if (statusId === 5) return { output: stdout, error: 'Time Limit Exceeded', verdict: 'TLE' };
+    if (statusId >= 7) return { output: stdout, error: stderr || data.message || 'Runtime error', verdict: 'RE' };
+    return { output: stdout, error: null, verdict: 'AC' };
+  } catch (err) { return { output: null, error: 'Network error: ' + err.message, verdict: 'ERR' }; }
+}
+async function runCode(langKey, code, stdin) {
+  const def = LANGUAGES[langKey];
+  const limits = { cpuTime: 5, wallTime: 10, memoryKb: 128000 };
+  if (def.mode === 'js')      return runJavaScript(code, stdin, limits);
+  if (def.mode === 'pyodide') return runPython(code, stdin, limits);
+  if (def.mode === 'judge0')  return runViaJudge0(def.judge0Id, code, stdin, limits);
+  return { output: null, error: 'Unknown language', verdict: 'ERR' };
+}
+
+/* ============================================================
+ * FRIENDLY JSON
+ * ============================================================ */
+function friendlyParseJson(text) {
+  let out = '', inString = false, escaped = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (escaped) { out += ch; escaped = false; continue; }
+    if (ch === '\\') { out += ch; escaped = true; continue; }
+    if (ch === '"') { inString = !inString; out += ch; continue; }
+    if (inString && (ch === '\n' || ch === '\r')) {
+      if (ch === '\r' && text[i+1] === '\n') i++;
+      out += '\\n'; continue;
+    }
+    if (inString && ch === '\t') { out += '\\t'; continue; }
+    out += ch;
+  }
+  return JSON.parse(out);
+}
+function validateTestCases(arr) {
+  if (!Array.isArray(arr)) throw new Error('Top level must be an array');
+  for (let i = 0; i < arr.length; i++) {
+    const c = arr[i];
+    if (typeof c !== 'object' || c === null) throw new Error(`Case ${i}: not an object`);
+    if (typeof c.input !== 'string') throw new Error(`Case ${i}: "input" must be a string`);
+    if (typeof c.correct !== 'string') throw new Error(`Case ${i}: "correct" must be a string`);
+  }
+  return arr;
+}
+
+/* ============================================================
+ * UI HELPERS
+ * ============================================================ */
+function escapeHtml(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
+function renderSidebar() {
+  const ul = document.getElementById('probList');
+  ul.innerHTML = '';
+  PROBLEMS.forEach(p => {
+    const li = document.createElement('li');
+    li.dataset.id = p.id;
+    if (p.id === currentProblemId) li.classList.add('active');
+    const badgeClass = p.status === 'ok' ? 'ok' : p.status === 'warn' ? 'warn' : 'err';
+    const badgeText = p.status === 'ok' ? 'checker ✓' : p.status === 'warn' ? 'best-effort' : 'manual only';
+    const prog = currentUser && currentUser.progress ? currentUser.progress[p.id] : null;
+    let right = '';
+    if (prog === 'solved') right = `<span class="badge solved">✓ solved</span>`;
+    else right = `<span class="badge ${badgeClass}">${badgeText}</span>`;
+    li.innerHTML = `<span>${p.title}</span>${right}`;
+    li.addEventListener('click', () => {
+      currentProblemId = p.id;
+      renderSidebar();
+      renderProblem();
+    });
+    ul.appendChild(li);
+  });
+
+  // Progress bar
+  const done = solvedCount();
+  const total = PROBLEMS.length;
+  document.getElementById('progressText').textContent = `${done} / ${total}`;
+  document.getElementById('progressFill').style.width = `${(done / total) * 100}%`;
+}
+
+function renderProblem() {
+  const p = PROBLEMS.find(x => x.id === currentProblemId);
+  const s = state[p.id];
+  const main = document.getElementById('main');
+  const badgeClass = p.status === 'ok' ? 'ok' : p.status === 'warn' ? 'warn' : 'err';
+  const badgeText = p.status === 'ok' ? 'Checker ready' : p.status === 'warn' ? 'Best-effort checker' : 'Manual only';
+  const tcs = TESTCASES[p.id] || [];
+  const tcsJson = JSON.stringify(tcs, null, 2);
+  const isAdmin = currentUser && currentUser.isAdmin;
+  const prog = currentUser && currentUser.progress ? currentUser.progress[p.id] : null;
+
+  main.innerHTML = `
+    <div class="prob-header">
+      <div>
+        <h2>${p.title}</h2>
+        <div class="prob-meta">
+          <span class="tag">⏱ ${p.timeLimit}</span>
+          <span class="tag">🧠 ${p.memoryLimit}</span>
+          <span class="tag ${badgeClass}">${badgeText}</span>
+          ${prog === 'solved' ? `<span class="tag solved">✓ Solved</span>` : ''}
+        </div>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" data-tab="statement">Statement</button>
+      <button class="tab" data-tab="samples">Test cases (${tcs.length})</button>
+      ${isAdmin ? `<button class="tab" data-tab="json">JSON (admin)</button>` : ''}
+      <button class="tab" data-tab="solver">Solver</button>
+    </div>
+    <div class="panel-content active" data-panel="statement">
+      <div class="statement">${p.statement}</div>
+      <details class="help">
+        <summary>Checker status: ${escapeHtml(p.statusNote)}</summary>
+        <p>${escapeHtml(p.statusNote)}</p>
+      </details>
+    </div>
+    <div class="panel-content" data-panel="samples">
+      ${tcs.length === 0
+        ? `<div class="note">No test cases defined.</div>`
+        : tcs.map((sm, i) => `
+          <div class="sample-block" data-sample-index="${i}">
+            <div class="sample-head">
+              <span>Case ${i + 1}${sm.note ? ' · ' + escapeHtml(sm.note) : ''}</span>
+              <button class="run-sample">▶ Run with your solver</button>
+            </div>
+            <div class="sample-body">
+              <div class="in">
+                <div class="sample-label">Input</div>
+                <pre>${escapeHtml(sm.input)}</pre>
+              </div>
+              <div class="out">
+                <div class="sample-label">Correct output</div>
+                <pre>${escapeHtml(sm.correct)}</pre>
+              </div>
+            </div>
+          </div>
+        `).join('')
+      }
+    </div>
+    ${isAdmin ? `
+    <div class="panel-content" data-panel="json">
+      <div class="note">
+        <strong>Admin only.</strong> Each case needs <code>input</code> and <code>correct</code>.
+        ${friendlyMode ? 'Friendly mode is <strong>on</strong>.' : 'Strict mode — use <code>\\n</code> for newlines.'}
+      </div>
+      <div class="field-label" style="margin-top:0.6rem; display:flex; justify-content:space-between; align-items:center;">
+        <span>Test cases JSON</span>
+        <span class="mode-toggle ${friendlyMode ? 'on' : ''}" id="modeToggle">
+          <span class="dot"></span><span>Friendly mode</span>
+        </span>
+      </div>
+      <textarea class="json" id="jsonEditor" spellcheck="false">${escapeHtml(tcsJson)}</textarea>
+      <div class="json-status" id="jsonStatus"></div>
+      <div class="btn-row">
+        <button class="primary" id="saveJsonBtn">💾 Save test cases</button>
+        <button id="resetJsonBtn">↺ Reset to defaults</button>
+      </div>
+    </div>
+    ` : ''}
+    <div class="panel-content" data-panel="solver">
+      <div class="editor-toolbar">
+        <select id="langSelect">
+          ${Object.entries(LANGUAGES).map(([k, v]) => `<option value="${k}" ${k === s.lang ? 'selected' : ''}>${v.label}</option>`).join('')}
+        </select>
+        <button class="primary" id="runBtn">▶ Run</button>
+        <button id="runAllBtn">▶ Run all cases</button>
+        <button id="resetCodeBtn">↺ Reset</button>
+        <button id="clearOutBtn">✕ Clear</button>
+        <span class="spacer"></span>
+      </div>
+      <div class="field-label">Code</div>
+      <textarea class="code" id="codeEditor" spellcheck="false">${escapeHtml(s.code)}</textarea>
+      <div class="field-label" style="margin-top:0.9rem;">Stdin</div>
+      <textarea class="stdin" id="stdinBox" spellcheck="false" placeholder="Paste input here, or click 'Run with your solver' on a test case.">${escapeHtml(s.stdin)}</textarea>
+      <div class="results">
+        <div class="field-label">Result</div>
+        <div class="result-box" id="resultBox">
+          <span class="muted">Run your code to see output.</span>
+        </div>
+      </div>
+    </div>
+  `;
+
+  main.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const name = tab.dataset.tab;
+      main.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t === tab));
+      main.querySelectorAll('.panel-content').forEach(pc => pc.classList.toggle('active', pc.dataset.panel === name));
+    });
+  });
+
+  const langSelect = document.getElementById('langSelect');
+  langSelect.addEventListener('change', () => {
+    state[p.id].lang = langSelect.value;
+    state[p.id].code = LANGUAGES[langSelect.value].example;
+    document.getElementById('codeEditor').value = state[p.id].code;
+    saveUserState();
+  });
+
+  document.getElementById('codeEditor').addEventListener('input', e => {
+    state[p.id].code = e.target.value;
+    saveUserState();
+  });
+  document.getElementById('stdinBox').addEventListener('input', e => { state[p.id].stdin = e.target.value; });
+
+  document.getElementById('resetCodeBtn').addEventListener('click', () => {
+    state[p.id].code = LANGUAGES[state[p.id].lang].example;
+    document.getElementById('codeEditor').value = state[p.id].code;
+    saveUserState();
+  });
+
+  document.getElementById('clearOutBtn').addEventListener('click', () => {
+    document.getElementById('resultBox').innerHTML = '<span class="muted">Run your code to see output.</span>';
+  });
+
+  document.getElementById('runBtn').addEventListener('click', () => {
+    const match = tcs.find(t => stripTrailing(t.input) === stripTrailing(s.stdin));
+    runAndShow(p, state[p.id], match || null);
+  });
+
+  document.getElementById('runAllBtn').addEventListener('click', async () => {
+    if (tcs.length === 0) { document.getElementById('resultBox').innerHTML = '<span class="muted">No test cases to run.</span>'; return; }
+    await runAllAndShow(p, state[p.id], tcs);
+  });
+
+  // Admin-only handlers
+  if (isAdmin) {
+    document.getElementById('modeToggle').addEventListener('click', () => {
+      friendlyMode = !friendlyMode;
+      renderProblem();
+      document.querySelector('.tab[data-tab="json"]').click();
+    });
+
+    const jsonEditor = document.getElementById('jsonEditor');
+    const jsonStatus = document.getElementById('jsonStatus');
+    const tryParse = () => {
+      try {
+        const parsed = friendlyMode ? friendlyParseJson(jsonEditor.value) : JSON.parse(jsonEditor.value);
+        validateTestCases(parsed);
+        jsonStatus.className = 'json-status ok';
+        jsonStatus.textContent = `✓ Valid — ${parsed.length} test case${parsed.length === 1 ? '' : 's'}`;
+        return parsed;
+      } catch (e) {
+        jsonStatus.className = 'json-status bad';
+        jsonStatus.textContent = `✗ ${e.message}`;
+        return null;
+      }
+    };
+    jsonEditor.addEventListener('input', tryParse);
+
+    document.getElementById('saveJsonBtn').addEventListener('click', () => {
+      const parsed = tryParse();
+      if (!parsed) return;
+      TESTCASES[p.id] = parsed;
+      saveTestcases(TESTCASES);
+      renderProblem();
+      document.querySelector('.tab[data-tab="json"]').click();
+      const st = document.getElementById('jsonStatus');
+      st.className = 'json-status ok';
+      st.textContent = `✓ Saved ${parsed.length} test case${parsed.length === 1 ? '' : 's'}`;
+    });
+
+    document.getElementById('resetJsonBtn').addEventListener('click', () => {
+      TESTCASES[p.id] = JSON.parse(JSON.stringify(DEFAULT_TESTCASES[p.id] || []));
+      saveTestcases(TESTCASES);
+      renderProblem();
+      document.querySelector('.tab[data-tab="json"]').click();
+    });
+  }
+
+  main.querySelectorAll('.run-sample').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = Number(btn.closest('.sample-block').dataset.sampleIndex);
+      const sample = tcs[idx];
+      if (!sample) return;
+      state[p.id].stdin = sample.input;
+      document.getElementById('stdinBox').value = sample.input;
+      main.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'solver'));
+      main.querySelectorAll('.panel-content').forEach(pc => pc.classList.toggle('active', pc.dataset.panel === 'solver'));
+      runAndShow(p, state[p.id], sample);
+    });
+  });
+}
+
+async function runAndShow(p, s, sample = null) {
+  const box = document.getElementById('resultBox');
+  const runBtn = document.getElementById('runBtn');
+  const runAllBtn = document.getElementById('runAllBtn');
+  const langKey = s.lang; const code = s.code; const stdin = s.stdin;
+
+  runBtn.disabled = true; runBtn.textContent = '⏳ Running…';
+  runAllBtn.disabled = true;
+  box.innerHTML = `<span class="muted">Running in ${LANGUAGES[langKey].label}…</span>`;
+
+  let res;
+  try { res = await runCode(langKey, code, stdin); }
+  catch (err) { res = { output: null, error: err.message || String(err), verdict: 'ERR' }; }
+
+  runBtn.disabled = false; runBtn.textContent = '▶ Run';
+  runAllBtn.disabled = false;
+
+  const execVerdict = res.verdict || (res.error ? 'RE' : 'AC');
+  let html = '';
+
+  if (sample) {
+    const cmp = (execVerdict === 'AC')
+      ? CHECKERS[p.id](res.output || '', sample.correct)
+      : { verdict: execVerdict, detail: execVerdict === 'TLE' ? 'Time Limit Exceeded' :
+                                          execVerdict === 'CE' ? 'Compilation Error' :
+                                          execVerdict === 'RE' ? 'Runtime Error' : 'Error' };
+    html += `<div class="verdict-row">`;
+    html += `<span class="field-label" style="margin:0;">verdict</span>`;
+    html += `<span class="verdict ${cmp.verdict}">${cmp.verdict}</span>`;
+    html += `<span class="status-msg ${cmp.verdict === 'AC' ? 'ok' : 'bad'}">${escapeHtml(cmp.detail)}</span>`;
+    html += `</div>`;
+    html += `<hr style="border:none;border-top:1px solid var(--border);margin:0.5rem 0;">`;
+    html += `<div class="field-label">Your output</div>`;
+    html += `<pre style="margin:0;white-space:pre-wrap;word-break:break-word;">${escapeHtml(res.output || '(no output)')}</pre>`;
+    if (res.error) html += `<div class="status-msg bad" style="margin-top:0.5rem;">stderr: ${escapeHtml(res.error)}</div>`;
+
+    // Update progress
+    markProgress(p.id, cmp.verdict);
+  } else {
+    html += `<div class="verdict-row"><span class="verdict ${execVerdict}">${execVerdict}</span>`;
+    if (res.error) html += `<span class="status-msg bad">${escapeHtml(res.error)}</span>`;
+    html += `</div>`;
+    if (res.output !== null && res.output !== undefined) {
+      html += `<pre style="margin:0;white-space:pre-wrap;word-break:break-word;">${escapeHtml(res.output || '(no output)')}</pre>`;
+    }
+  }
+
+  box.innerHTML = html;
+  s.lastOutput = res.output || ''; s.lastVerdict = execVerdict;
+}
+
+async function runAllAndShow(p, s, tcs) {
+  const box = document.getElementById('resultBox');
+  const runBtn = document.getElementById('runBtn');
+  const runAllBtn = document.getElementById('runAllBtn');
+  const langKey = s.lang; const code = s.code;
+
+  runBtn.disabled = true;
+  runAllBtn.disabled = true; runAllBtn.textContent = '⏳ Running all…';
+  box.innerHTML = `<span class="muted">Running ${tcs.length} test case${tcs.length === 1 ? '' : 's'} in ${LANGUAGES[langKey].label}…</span>`;
+
+  const results = [];
+  for (let i = 0; i < tcs.length; i++) {
+    const tc = tcs[i];
+    let res;
+    try { res = await runCode(langKey, code, tc.input); }
+    catch (err) { res = { output: null, error: err.message || String(err), verdict: 'ERR' }; }
+    const execVerdict = res.verdict || (res.error ? 'RE' : 'AC');
+    let cmp;
+    if (execVerdict === 'AC') cmp = CHECKERS[p.id](res.output || '', tc.correct);
+    else cmp = { verdict: execVerdict, detail: execVerdict === 'TLE' ? 'Time Limit Exceeded' :
+                                            execVerdict === 'CE' ? 'Compilation Error' :
+                                            execVerdict === 'RE' ? 'Runtime Error' : 'Error' };
+    results.push({ index: i + 1, note: tc.note, verdict: cmp.verdict, detail: cmp.detail });
+  }
+
+  runBtn.disabled = false;
+  runAllBtn.disabled = false; runAllBtn.textContent = '▶ Run all cases';
+
+  const passed = results.filter(r => r.verdict === 'AC').length;
+  const total = results.length;
+
+  let html = `<div class="verdict-row">`;
+  html += `<span class="field-label" style="margin:0;">summary</span>`;
+  html += `<span class="verdict ${passed === total ? 'AC' : 'WA'}">${passed} / ${total} passed</span>`;
+  html += `</div>`;
+  html += `<hr style="border:none;border-top:1px solid var(--border);margin:0.5rem 0;">`;
+  results.forEach(r => {
+    html += `<div style="display:flex; gap:0.6rem; align-items:center; padding:0.3rem 0; border-bottom:1px solid var(--border);">`;
+    html += `<span style="color:var(--muted); min-width:2rem;">#${r.index}</span>`;
+    html += `<span class="verdict ${r.verdict}" style="min-width:3rem; text-align:center;">${r.verdict}</span>`;
+    html += `<span style="color:var(--muted); font-size:0.78rem; flex:1;">${escapeHtml(r.note || r.detail || '')}</span>`;
+    html += `</div>`;
+  });
+  box.innerHTML = html;
+
+  // Update progress: if all cases passed, mark as solved
+  if (passed === total && total > 0) markProgress(p.id, 'AC');
+  else if (total > 0) markProgress(p.id, 'attempted');
+}
+
+/* ============================================================
+ * LOGIN UI
+ * ============================================================ */
+function showLogin() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('app').classList.remove('active');
+  document.getElementById('loginUser').focus();
+}
+function showApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').classList.add('active');
+  document.getElementById('userName').textContent = currentUser.username;
+  const roleEl = document.getElementById('userRole');
+  roleEl.textContent = currentUser.isAdmin ? 'admin' : 'student';
+  roleEl.className = 'role-badge' + (currentUser.isAdmin ? ' admin' : '');
+  renderSidebar();
+  renderProblem();
+}
+
+function bindLoginHandlers() {
+  const err = document.getElementById('loginErr');
+
+  document.getElementById('signinBtn').addEventListener('click', () => {
+    err.textContent = '';
+    const u = document.getElementById('loginUser').value.trim();
+    const p = document.getElementById('loginPass').value;
+    if (!u || !p) { err.textContent = 'Enter username and password'; return; }
+    try {
+      const user = verifyUser(u, p);
+      currentUser = user;
+      setSession(u, p);
+      loadUserState(user);
+      showApp();
+    } catch (e) { err.textContent = e.message; }
+  });
+
+  document.getElementById('signupBtn').addEventListener('click', () => {
+    err.textContent = '';
+    const u = document.getElementById('signupUser').value.trim();
+    const p = document.getElementById('signupPass').value;
+    const p2 = document.getElementById('signupPass2').value;
+    if (!u || !p || !p2) { err.textContent = 'Fill in all fields'; return; }
+    if (p !== p2) { err.textContent = 'Passwords do not match'; return; }
+    try {
+      const user = createUser(u, p);
+      currentUser = { ...user, isAdmin: false };
+      setSession(u, p);
+      loadUserState(currentUser);
+      showApp();
+    } catch (e) { err.textContent = e.message; }
+  });
+
+  document.getElementById('showSignup').addEventListener('click', () => {
+    document.getElementById('signinForm').style.display = 'none';
+    document.getElementById('signupForm').style.display = 'block';
+    document.getElementById('loginSub').textContent = 'Create a new account';
+    err.textContent = '';
+  });
+  document.getElementById('showSignin').addEventListener('click', () => {
+    document.getElementById('signinForm').style.display = 'block';
+    document.getElementById('signupForm').style.display = 'none';
+    document.getElementById('loginSub').textContent = 'Sign in to track your progress';
+    err.textContent = '';
+  });
+
+  // Enter to submit
+  ['loginUser','loginPass'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('signinBtn').click();
+    });
+  });
+  ['signupUser','signupPass','signupPass2'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('signupBtn').click();
+    });
+  });
+}
+
+function bindLogout() {
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    currentUser = null;
+    clearSession();
+    // reset state to defaults
+    PROBLEMS.forEach(p => {
+      state[p.id].lang = 'javascript';
+      state[p.id].code = LANGUAGES.javascript.example;
+    });
+    showLogin();
+  });
+}
+
+/* ============================================================
+ * INIT
+ * ============================================================ */
+bindLoginHandlers();
+bindLogout();
+
+const restored = restoreSession();
+if (restored) {
+  currentUser = restored;
+  loadUserState(restored);
+  showApp();
+} else {
+  showLogin();
+}
+</script>
+</body>
+</html>
